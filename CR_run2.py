@@ -46,48 +46,28 @@ def _generate_constraints(nparams):
     out = {}
     for i in range(nparams):
         if i == 0:
-            out[i] = {"MIN":-50,"MAX":50}
+            out[i] = {"MIN":0,"MAX":50}
         else:
             out[i] = {"MIN":-50,"MAX":50}
     return out
 
 _rpf_options = {
-    '0x0': {
-        'form': '(@0)',
+    '0': {
+        'form': '@0',
         'constraints': _generate_constraints(1)
     },
-    '1x0': {
-        'form': '(@0+@1*x)',
-        'constraints': _generate_constraints(2)
+    "1":{
+        'form': '@0+@1*x+@2*y',
+        'constraints': _generate_constraints(3)        
     },
-    '0x1': {
-        'form': '(@0+@1*y)',
-        'constraints': _generate_constraints(2)
-    },
-    '1x1': {
-        'form': '(@0+@1*x)*(@2+@3*y)',
-        'constraints': _generate_constraints(3)
-    },
-    '2x0': {
-        'form': '(@0+@1*x+@2*x**2)*(@3)',
-        'constraints': _generate_constraints(4)
-    },
-    '2x1': {
-	'form': '(@0+@1*x+@2*x**2)*(@3+@4*y)',
-	'constraints': _generate_constraints(4)
-    },
-    '2x2': {
-        'form': '(@0+@1*x+@2*x**2)*(@3+@4*y*@5*y**2)',
-        'constraints': _generate_constraints(4)
-    },
-    '3x2': {
-        'form': '(@0+@1*x+@2*x**2+@3*x**3)*(@4+@5*y)',
-        'constraints': _generate_constraints(4)
+    "2":{
+        'form': '@0+@1*x+@2*y+@3*x*x+@4*y*y+@5*x*y',
+        'constraints': _generate_constraints(6)        
     }
 }
 
-def test_make():
-    twoD = TwoDAlphabet('CR_2017','CR_2017.json',loadPrevious=False)
+def test_make(working_area='CR_run2',json_name='CR_run2.json'):
+    twoD = TwoDAlphabet(working_area,json_name,loadPrevious=False)
     qcd_hists = twoD.InitQCDHists()
 
     for f,p in [_get_other_region_names(r) for r in twoD.ledger.GetRegions() if 'Fail' in r]:
@@ -111,16 +91,16 @@ def test_make():
 
     twoD.Save()
 
-def test_fit(signal, tf='', working_area='CR_2017', defMinStrat=0,  extra='--robustFit 1'): #extra='--robustHesse 1'
+def test_fit(signal, tf='', working_area='CR_run2', defMinStrat=0,  extra='--robustFit 1'): #extra='--robustHesse 1'
     twoD = TwoDAlphabet(working_area, '{}/runConfig.json'.format(working_area), loadPrevious=True)
 
     subset = twoD.ledger.select(_select_signal, signal, tf)
     twoD.MakeCard(subset, '{}-{}_area'.format(signal, tf))
 
-    twoD.MLfit('{}-{}_area'.format(signal,tf),rMin=0,rMax=5,verbosity=1,extra=extra)
+    twoD.MLfit('{}-{}_area'.format(signal,tf),rMin=-20,rMax=20,verbosity=1,extra=extra)
 
 
-def test_plot(signal, tf='', working_area='CR_2017', prefit=False, regionsToGroup=[]):
+def test_plot(signal, tf='', working_area='CR_run2', prefit=False):
     twoD = TwoDAlphabet(working_area, '{}/runConfig.json'.format(working_area), loadPrevious=True)
     subset = twoD.ledger.select(_select_signal, signal, tf)
     twoD.StdPlots('{}-{}_area'.format(signal,tf), subset, prefit=prefit)
@@ -235,9 +215,8 @@ def test_FTest(poly1, poly2, signal='MX3000_MY300'):
 
     plot_FTest(base_fstat,nRpfs1,nRpfs2,nBins)
 
-def test_GoF(signal, tf='', condor=True):
+def test_GoF(signal, working_area,tf='', condor=True,extra=''):
     #assert SRorCR == 'CR'
-    working_area = 'XHY_CRfl'
     twoD = TwoDAlphabet(working_area, '{}/runConfig.json'.format(working_area), loadPrevious=True)
     signame = signal
     if not os.path.exists(twoD.tag+'/'+signame+'-{}_area/card.txt'.format(tf)):
@@ -247,18 +226,18 @@ def test_GoF(signal, tf='', condor=True):
     if condor == False:
         twoD.GoodnessOfFit(
             signame+'-{}_area'.format(tf), ntoys=100, freezeSignal=0,
-            condor=False
+            condor=False,extra=extra
         )
     else:
         twoD.GoodnessOfFit(
             signame+'-{}_area'.format(tf), ntoys=100, freezeSignal=0,
-            condor=True, njobs=50
+            condor=True, njobs=10,extra=extra
         )
 
-def test_GoF_plot(signal, tf='', condor=True):
+def test_GoF_plot(signal, working_area, tf='', condor=True):
     '''Plot the GoF in ttbar<SRorCR>/TprimeB-<signal>_area (condor=True indicates that condor jobs need to be unpacked)'''
     signame = signal
-    plot.plot_gof('XHY_CRfl','{}-{}_area'.format(signame,tf), condor=condor)
+    plot.plot_gof(working_area,'{}-{}_area'.format(signame,tf), condor=condor)
 
 def load_RPF(twoD):
     params_to_set = twoD.GetParamsOnMatch('rpf.*', 'TprimeB-1800-125-_area', 'b')
@@ -288,9 +267,14 @@ def test_Impacts(SRorCR):
 
 if __name__ == "__main__":
    
-    test_make()
-    working_area='CR_2017'
-    opt_names = ['1x1']
+    #test_make()
+    working_area='CR_run2'
+    opt_names = ["0","1","2"]
+    opt_names = ["1"]
     for opt_name in opt_names:
-        test_fit("MX2400_MY100_2017",working_area=working_area,tf=opt_name)        
-        test_plot("MX2400_MY100_2017",working_area=working_area,tf=opt_name)
+        test_fit(signal="MX1400_MY90",working_area=working_area,tf=opt_name)        
+        test_plot(signal="MX1400_MY90",working_area=working_area,tf=opt_name)
+        
+    #Not yet ported to work iwth condor at lpc
+    #test_GoF("MX2400_MY100_2017", working_area=working_area,tf="test", condor=False,extra="--cminDefaultMinimizerStrategy 0")
+    #test_GoF_plot("MX2400_MY100_2017", working_area=working_area,tf="test", condor=False)
