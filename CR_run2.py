@@ -46,9 +46,9 @@ def _generate_constraints(nparams):
     out = {}
     for i in range(nparams):
         if i == 0:
-            out[i] = {"MIN":0,"MAX":50}
+            out[i] = {"MIN":-50,"MAX":50,"NOM":0.005}
         else:
-            out[i] = {"MIN":-50,"MAX":50}
+            out[i] = {"MIN":-50,"MAX":50,"NOM":0.0}
     return out
 
 _rpf_options = {
@@ -57,11 +57,11 @@ _rpf_options = {
         'constraints': _generate_constraints(1)
     },
     "1":{
-        'form': '@0+@1*x+@2*y',
+        'form': '@0*(1+@1*x+@2*y)',
         'constraints': _generate_constraints(3)        
     },
     "2":{
-        'form': '@0+@1*x+@2*y+@3*x*x+@4*y*y+@5*x*y',
+        'form': '@0*(1+@1*x+@2*y+@3*x*x+@4*y*y+@5*x*y)',
         'constraints': _generate_constraints(6)        
     }
 }
@@ -265,16 +265,56 @@ def test_Impacts(SRorCR):
     twoD = TwoDAlphabet('ttbar{}'.format(SRorCR), 'ttbar{}/runConfig.json'.format(SRorCR), loadPrevious=True)
     twoD.Impacts('TprimeB-1800-125-_area', cardOrW='card.txt', extra='-t 1')
 
+def _load_fit_rpf(working_area,signal_name,rpfOrder,json_file):
+    twoD_blindFit = TwoDAlphabet(working_area,json_file, loadPrevious=True)
+    params_to_set = twoD_blindFit.GetParamsOnMatch('rpf.*', f'{signal_name}-{rpfOrder}_area', 's')
+    return {k:v['val'] for k,v in params_to_set.items()}
+
+
+def test_limit(working_area,signal,rpfOrder,json_file,blind=True,rpf_params={}):
+    '''Perform a blinded limit. To be blinded, the Combine algorithm (via option `--run blind`)
+    will create an Asimov toy dataset from the pre-fit model. Since the TF parameters are meaningless
+    in our true "pre-fit", we need to load in the parameter values from a different fit so we have
+    something reasonable to create the Asimov toy. 
+    '''
+    twoD = TwoDAlphabet(working_area, json_file, loadPrevious=True)
+
+    #Make a subset and card as in test_fit()
+    subset = twoD.ledger.select(_select_signal, signal, rpfOrder)
+    twoD.MakeCard(subset, '{}-{}_area'.format(signal, rpfOrder))
+    #Run the blinded limit with our dictionary of TF parameters
+    twoD.Limit(
+        subtag='{}-{}_area'.format(signal, rpfOrder),
+        blindData=blind,
+        verbosity=0,
+        setParams=params_to_set,
+        condor=False
+    )
+
 if __name__ == "__main__":
    
-    #test_make()
-    working_area='CR_run2'
-    opt_names = ["0","1","2"]
-    opt_names = ["1"]
-    for opt_name in opt_names:
-        test_fit(signal="MX1400_MY90",working_area=working_area,tf=opt_name)        
-        test_plot(signal="MX1400_MY90",working_area=working_area,tf=opt_name)
-        
+    #Running CR fits
+    #test_make(working_area='CR_run2',json_name='CR_run2.json')
+    #working_area='CR_run2'
+    #opt_names = ["0","1"]
+    #for opt_name in opt_names:
+        #test_fit(signal="MX1400_MY90",working_area=working_area,tf=opt_name)        
+        #test_plot(signal="MX1400_MY90",working_area=working_area,tf=opt_name)
+
     #Not yet ported to work iwth condor at lpc
     #test_GoF("MX2400_MY100_2017", working_area=working_area,tf="test", condor=False,extra="--cminDefaultMinimizerStrategy 0")
     #test_GoF_plot("MX2400_MY100_2017", working_area=working_area,tf="test", condor=False)
+
+    #Running limits using RPF from CR
+    working_area_SR='SR_run2'
+
+    #test_make(working_area=working_area_SR,json_name='SR_run2.json')
+    # Returns a dictionary of the TF parameters with the names as keys and the post-fit values as dict values.
+    load_rpf_from_signal_name = "MX1400_MY90"
+    params_to_set = _load_fit_rpf("CR_run2","MX1400_MY90","1","CR_run2.json")
+    params_to_set = {key.replace('CR', 'SR'): value for key, value in params_to_set.items()}#Replace CR parameter names with SR
+    rpf_order="1"
+    #Btw. signal is normalized to xsec=5fb!
+    for MX in [1200, 1400, 1600, 2000, 2500, 3000, 3500]:
+        signal=f"MX{MX}_MY90"
+        test_limit(working_area_SR,signal,rpf_order,'SR_run2.json',blind=True,rpf_params=params_to_set)

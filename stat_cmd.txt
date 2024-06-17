@@ -1,0 +1,2 @@
+combine -M GoodnessOfFit -d initialFitWorkspace.root --algo=saturated  -v 0 -n _gof_data --cminDefaultMinimizerStrategy 0   --snapshotName initialFit --bypassFrequentistFit
+combine -M GoodnessOfFit -d initialFitWorkspace.root --algo=saturated -n _gof_toys -v 0 --cminDefaultMinimizerStrategy 0 --toysFrequentist -t 500 -s 123456 --snapshotName initialFit --bypassFrequentistFit
