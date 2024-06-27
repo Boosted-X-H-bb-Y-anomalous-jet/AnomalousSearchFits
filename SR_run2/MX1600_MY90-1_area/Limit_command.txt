@@ -1,1 +1,0 @@
-combine -M AsymptoticLimits -d card.txt --saveWorkspace --cminDefaultMinimizerStrategy 0 --setParameters Background_SR_rpf_1_par0=0.005230859628528855,Background_SR_rpf_1_par1=-0.5352463451924354,Background_SR_rpf_1_par2=0.5814115607564682 --run=blind -v 0
