@@ -5,7 +5,7 @@
         "HIST": "mjj_my_$process_$region_nom",
         "HIST_UP": "mjj_my_$process_$region_$syst_up",
         "HIST_DOWN": "mjj_my_$process_$region_$syst_down",
-        "path": "/uscms_data/d3/roguljic/el8_anomalous/fitting/AnomalousSearchFits/templates/",
+        "path": "/uscms_data/d3/roguljic/el8_anomalous/el9_fitting/templates/",
         "SIGNAME": ["MX1400_MY90_2016APV","MX1400_MY90_2016","MX1400_MY90_2017","MX1400_MY90_2018"],
         "TTToHadronic": ["TTToHadronic_2016APV","TTToHadronic_2016","TTToHadronic_2017","TTToHadronic_2018"]	
     },

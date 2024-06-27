@@ -63,6 +63,10 @@ _rpf_options = {
     "2":{
         'form': '@0*(1+@1*x+@2*y+@3*x*x+@4*y*y+@5*x*y)',
         'constraints': _generate_constraints(6)        
+    },
+    "3":{
+        'form': '@0*(1+@1*x+@2*y+@3*x*x+@4*y*y+@5*x*y+@6*x*x*y+@7*x*y*y+@8*x*x*x+@9*y*y*y)',
+        'constraints': _generate_constraints(10)        
     }
 }
 
@@ -120,12 +124,10 @@ def _gof_for_FTest(twoD, subtag, card_or_w='card.txt'):
         gof_data_cmd = ' '.join(gof_data_cmd)
         execute_cmd(gof_data_cmd)
 
-def test_FTest(poly1, poly2, signal='MX3000_MY300'):
+def test_FTest(poly1, poly2, working_area="CR_run2",signal='MX1400_MY90'):
     '''
     Perform an F-test using existing working areas
     '''
-    #assert SRorCR == 'CR'
-    working_area = 'XHY_CRfl'
     
     twoD = TwoDAlphabet(working_area, '{}/runConfig.json'.format(working_area), loadPrevious=True)
     binning = twoD.binnings['default']
@@ -135,15 +137,15 @@ def test_FTest(poly1, poly2, signal='MX3000_MY300'):
     params1 = twoD.ledger.select(_select_signal, signal, poly1).alphaParams
     rpfSet1 = params1[params1["name"].str.contains("rpf")]
     nRpfs1  = len(rpfSet1.index)
-    _gof_for_FTest(twoD, 'MX3000_MY300-{}_area'.format(poly1), card_or_w='card.txt')
-    gofFile1 = working_area+'/MX3000_MY300-{}_area/higgsCombine_gof_data.GoodnessOfFit.mH120.root'.format(poly1)
+    _gof_for_FTest(twoD, f'{signal}-{poly1}_area', card_or_w='card.txt')
+    gofFile1 = f'{working_area}/{signal}-{poly1}_area/higgsCombine_gof_data.GoodnessOfFit.mH120.root'
 
     # Get number of RPF params and run GoF for poly2
     params2 = twoD.ledger.select(_select_signal, signal, poly2).alphaParams
     rpfSet2 = params2[params2["name"].str.contains("rpf")]
     nRpfs2  = len(rpfSet2.index)
-    _gof_for_FTest(twoD, 'MX3000_MY300-{}_area'.format(poly2), card_or_w='card.txt')
-    gofFile2 = working_area+'/MX3000_MY300-{}_area/higgsCombine_gof_data.GoodnessOfFit.mH120.root'.format(poly2)
+    _gof_for_FTest(twoD, f'{signal}-{poly2}_area', card_or_w='card.txt')
+    gofFile2 = f'{working_area}/{signal}-{poly2}_area/higgsCombine_gof_data.GoodnessOfFit.mH120.root'
 
     base_fstat = FstatCalc(gofFile1,gofFile2,nRpfs1,nRpfs2,nBins)
     print(base_fstat)
@@ -230,7 +232,7 @@ def test_GoF(signal, working_area,tf='', condor=True,extra=''):
         )
     else:
         twoD.GoodnessOfFit(
-            signame+'-{}_area'.format(tf), ntoys=100, freezeSignal=0,
+            signame+'-{}_area'.format(tf), ntoys=500, freezeSignal=0,
             condor=True, njobs=10,extra=extra
         )
 
@@ -243,23 +245,22 @@ def load_RPF(twoD):
     params_to_set = twoD.GetParamsOnMatch('rpf.*', 'TprimeB-1800-125-_area', 'b')
     return {k:v['val'] for k,v in params_to_set.items()}
 
-def test_SigInj(SRorCR, r, condor=False):
-    '''Perform a signal injection test'''
-    assert(SRorCR in ['SR','CR'])
-    twoD = TwoDAlphabet('ttbar{}'.format(SRorCR), 'ttbar{}/runConfig.json'.format(SRorCR), loadPrevious=True)
-    params = load_RPF(twoD)
+def test_SigInj(working_area, signal, rpfOrder, rpfParams, r, condor=False,njobs=10):
+    twoD = TwoDAlphabet(working_area, '{}/runConfig.json'.format(working_area), loadPrevious=True)
     twoD.SignalInjection(
-        'TprimeB-1800-125-_area',
+        '{}-{}_area'.format(signal, rpfOrder),
         injectAmount = r,       # amount of signal to inject (r=0 <- bias test)
         ntoys = 500,
         blindData = False,      # working with toy data, no need to blind
-        setParams = params,     # give the toys the same RPF params
+        setParams = rpfParams,     # give the toys the same RPF params
         verbosity = 0,
-        extra = '' if r == 0 else '--expectSignal={}'.format(r),
-        condor = condor)
+        extra = '',
+        condor = condor,
+        njobs=njobs)
 
-def test_SigInj_plot(SRorCR, r, condor=False):
-    plot.plot_signalInjection('ttbarCR','TprimeB-1800-125-_area', injectedAmount=r, condor=condor)
+def test_SigInj_plot(working_area,signal,rpfOrder, r, condor=False):
+    signal_area='{}-{}_area'.format(signal, rpfOrder)
+    plot.plot_signalInjection(working_area,signal_area, injectedAmount=r, condor=condor)
 
 def test_Impacts(SRorCR):
     twoD = TwoDAlphabet('ttbar{}'.format(SRorCR), 'ttbar{}/runConfig.json'.format(SRorCR), loadPrevious=True)
@@ -287,34 +288,45 @@ def test_limit(working_area,signal,rpfOrder,json_file,blind=True,rpf_params={}):
         subtag='{}-{}_area'.format(signal, rpfOrder),
         blindData=blind,
         verbosity=0,
-        setParams=params_to_set,
+        setParams=rpf_params,
         condor=False
     )
 
 if __name__ == "__main__":
-   
+    #make_env_tarball()
     #Running CR fits
     #test_make(working_area='CR_run2',json_name='CR_run2.json')
-    #working_area='CR_run2'
-    #opt_names = ["0","1"]
-    #for opt_name in opt_names:
-        #test_fit(signal="MX1400_MY90",working_area=working_area,tf=opt_name)        
-        #test_plot(signal="MX1400_MY90",working_area=working_area,tf=opt_name)
+    working_area='CR_run2'
+    opt_names = ["0","1","2","3"]
+    # for opt_name in opt_names:
+    #     test_fit(signal="MX1400_MY90",working_area=working_area,tf=opt_name) 
+    #     if opt_name=="2":
+    #         test_plot(signal="MX1400_MY90",working_area=working_area,tf=opt_name)
 
-    #Not yet ported to work iwth condor at lpc
-    #test_GoF("MX2400_MY100_2017", working_area=working_area,tf="test", condor=False,extra="--cminDefaultMinimizerStrategy 0")
-    #test_GoF_plot("MX2400_MY100_2017", working_area=working_area,tf="test", condor=False)
+    #test_GoF("MX1400_MY90", working_area=working_area,tf="2", condor=True,extra="--cminDefaultMinimizerStrategy 0")
+    test_GoF_plot("MX1400_MY90", working_area=working_area,tf="2", condor=True,)
 
+    #test_FTest("0", "1", working_area="CR_run2",signal='MX1400_MY90')
+    #test_FTest("1", "2", working_area="CR_run2",signal='MX1400_MY90')
+    #test_FTest("2", "3", working_area="CR_run2",signal='MX1400_MY90')
     #Running limits using RPF from CR
     working_area_SR='SR_run2'
 
     #test_make(working_area=working_area_SR,json_name='SR_run2.json')
     # Returns a dictionary of the TF parameters with the names as keys and the post-fit values as dict values.
     load_rpf_from_signal_name = "MX1400_MY90"
-    params_to_set = _load_fit_rpf("CR_run2","MX1400_MY90","1","CR_run2.json")
+    params_to_set = _load_fit_rpf("CR_run2","MX1400_MY90","2","CR_run2.json")
     params_to_set = {key.replace('CR', 'SR'): value for key, value in params_to_set.items()}#Replace CR parameter names with SR
-    rpf_order="1"
+    rpf_order="2"
     #Btw. signal is normalized to xsec=5fb!
-    for MX in [1200, 1400, 1600, 2000, 2500, 3000, 3500]:
-        signal=f"MX{MX}_MY90"
-        test_limit(working_area_SR,signal,rpf_order,'SR_run2.json',blind=True,rpf_params=params_to_set)
+    #Signal injection part
+    # for MX in [1400]:
+    #     signal=f"MX{MX}_MY90"
+        #test_fit(signal=signal,working_area=working_area_SR,tf=rpf_order)#Uncomment if needed to create a card
+        #test_SigInj(working_area_SR, signal, rpf_order, params_to_set, r=0.5, condor=True)
+        #test_SigInj_plot(working_area_SR, signal, rpf_order,0.5,condor=True)
+    
+    #Limit part
+    # for MX in [1200, 1400, 1600, 2000, 2500, 3000, 3500]:
+    #     signal=f"MX{MX}_MY90"
+    #     test_limit(working_area_SR,signal,rpf_order,'SR_run2.json',blind=True,rpf_params=params_to_set)
