@@ -245,8 +245,18 @@ def load_RPF(twoD):
     params_to_set = twoD.GetParamsOnMatch('rpf.*', 'TprimeB-1800-125-_area', 'b')
     return {k:v['val'] for k,v in params_to_set.items()}
 
-def test_SigInj(working_area, signal, rpfOrder, rpfParams, r, condor=False,njobs=10):
+def test_SigInj(working_area, signal, rpfOrder, rpfParams, r, condor=False,njobs=10,scale_rpf=1.0):
     twoD = TwoDAlphabet(working_area, '{}/runConfig.json'.format(working_area), loadPrevious=True)
+    if scale_rpf!=1.0:
+        print(rpfParams)
+        print("Scaling rpf params for sig injection")
+        for rpf_name, rpf_val in rpfParams.items():
+            if("par0" in rpf_name):
+            #Sometimes we want to inflate bkg to check if positive signal bias comes from low stats
+            #par0 sets the overall scale
+                rpfParams[rpf_name] = rpf_val*scale_rpf
+        print(rpfParams)
+
     twoD.SignalInjection(
         '{}-{}_area'.format(signal, rpfOrder),
         injectAmount = r,       # amount of signal to inject (r=0 <- bias test)
@@ -304,7 +314,7 @@ if __name__ == "__main__":
     #         test_plot(signal="MX1400_MY90",working_area=working_area,tf=opt_name)
 
     #test_GoF("MX1400_MY90", working_area=working_area,tf="2", condor=True,extra="--cminDefaultMinimizerStrategy 0")
-    test_GoF_plot("MX1400_MY90", working_area=working_area,tf="2", condor=True,)
+    #test_GoF_plot("MX1400_MY90", working_area=working_area,tf="2", condor=True,)
 
     #test_FTest("0", "1", working_area="CR_run2",signal='MX1400_MY90')
     #test_FTest("1", "2", working_area="CR_run2",signal='MX1400_MY90')
@@ -320,11 +330,10 @@ if __name__ == "__main__":
     rpf_order="2"
     #Btw. signal is normalized to xsec=5fb!
     #Signal injection part
-    # for MX in [1400]:
-    #     signal=f"MX{MX}_MY90"
+    for MX in [1400]:
+        signal=f"MX{MX}_MY90"
         #test_fit(signal=signal,working_area=working_area_SR,tf=rpf_order)#Uncomment if needed to create a card
-        #test_SigInj(working_area_SR, signal, rpf_order, params_to_set, r=0.5, condor=True)
-        #test_SigInj_plot(working_area_SR, signal, rpf_order,0.5,condor=True)
+        test_SigInj(working_area_SR, signal, rpf_order, params_to_set, r=0.0, condor=True,scale_rpf=1.0)
     
     #Limit part
     # for MX in [1200, 1400, 1600, 2000, 2500, 3000, 3500]:
