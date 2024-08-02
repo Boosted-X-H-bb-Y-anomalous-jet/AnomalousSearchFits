@@ -5,7 +5,7 @@
         "HIST": "mjj_my_$process_$region_nom",
         "HIST_UP": "mjj_my_$process_$region_$syst_up",
         "HIST_DOWN": "mjj_my_$process_$region_$syst_down",
-        "path": "/uscms_data/d3/roguljic/el8_anomalous/el9_fitting/templates/",
+        "path": "/uscms_data/d3/roguljic/el8_anomalous/el9_fitting/templates_v4/",
         "SIGNAME": [
         "MX1200_MY90_2016APV","MX1200_MY90_2016","MX1200_MY90_2017","MX1200_MY90_2018",
         "MX1400_MY90_2016APV","MX1400_MY90_2016","MX1400_MY90_2017","MX1400_MY90_2018",
@@ -15,15 +15,16 @@
         "MX3000_MY90_2016APV","MX3000_MY90_2016","MX3000_MY90_2017","MX3000_MY90_2018",
         "MX3500_MY90_2016APV","MX3500_MY90_2016","MX3500_MY90_2017","MX3500_MY90_2018"
         ],
-        "TTToHadronic": ["TTToHadronic_2016APV","TTToHadronic_2016","TTToHadronic_2017","TTToHadronic_2018"]	
+        "TTbar": ["TTToHadronic_2016APV","TTToHadronic_2016","TTToHadronic_2017","TTToHadronic_2018","TTToSemiLeptonic_2016APV","TTToSemiLeptonic_2016","TTToSemiLeptonic_2017","TTToSemiLeptonic_2018"]	
+
     },
     "REGIONS": {
         "SR_Pass": {
-            "PROCESSES": ["SIGNAME","TTToHadronic"],
+            "PROCESSES": ["SIGNAME","TTbar"],
             "BINNING": "default"
         },
         "SR_Fail": {
-            "PROCESSES": ["SIGNAME","TTToHadronic"],
+            "PROCESSES": ["TTbar"],
             "BINNING": "default"
         }
     },
@@ -31,7 +32,7 @@
 	"data_obs": {
             "SYSTEMATICS":[],
             "SCALE": 1.0,
-            "COLOR": 1,
+            "COLOR": "black",
             "TYPE": "DATA",
             "ALIAS":"data_obs_run2",
             "TITLE": "Data",
@@ -40,15 +41,15 @@
 	"SIGNAME": {
 	    "SYSTEMATICS":["lumi","pdf","prefire","pileup","PS_ISR","PS_FSR","F","R","RF","jes","jer","jms","jmr","pnet"],
             "SCALE": 1.0,
-            "COLOR": 1,
+            "COLOR": "blue",
             "TYPE": "SIGNAL",
             "TITLE": "XtoHY",
             "LOC": "path/FILE:HIST"
 	},
-    "TTToHadronic": {        
-        "SYSTEMATICS":["lumi","ttbar_xsec","pdf","prefire","pileup","PS_ISR","PS_FSR","F","R","RF","top_ptrw","jes","jer","jms","jmr"],
+    "TTbar": {        
+        "SYSTEMATICS":["lumi","ttbar_xsec","pdf","prefire","pileup","PS_ISR","PS_FSR","F","R","RF","jes","jer","jms","jmr"],
         "SCALE": 1.0,
-        "COLOR": 2,
+        "COLOR": "red",
         "TYPE": "BKG",
         "TITLE": "t#bar{t}",
         "LOC":"path/FILE:HIST"
@@ -61,7 +62,7 @@
             "VAL": 1.019
         },
         "ttbar_xsec": {
-            "VAL": 1.2
+            "VAL": 1.05
         },
         "top_ptrw": {
             "ALIAS":"top_ptrw",
@@ -151,6 +152,7 @@
             "SIGMA": 1.0
         }
 
+
     },
     "BINNING": {
         "default": {
@@ -176,7 +178,7 @@
         "haddSignals": true,
         "plotPrefitSigInFitB": true,
         "plotTitles":false,
-	    "plotTemplateComparisons": false,
+	    "plotTemplateComparisons": true,
         "plotEvtsPerUnit": true,
         "year": 2
     }
