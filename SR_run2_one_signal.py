@@ -95,14 +95,15 @@ def test_make(working_area='CR_run2',json_name='CR_run2.json'):
 
     twoD.Save()
 
+
 def add_tt_pnet_sf_to_card(working_area,subtag):
     datacard_path = f"{working_area}/{subtag}/card.txt"
     with open(datacard_path, 'r') as datacard:
         lines = datacard.readlines()
     
-    tt_pnet_efficiency = 0.035#calculated by hand on v6, hadronic+semileptonic pass/(pass+fail)!
-    rate_param_pass = "CMS_ttbar_mistag_PNet rateParam CR_Pass* TTTo* 1.0 [0.0,3.0]\n"
-    rate_param_fail = f"tt_scale_fail rateParam CR_Fail* TTTo* (1-{tt_pnet_efficiency}*@0)/(1-{tt_pnet_efficiency}) CMS_ttbar_mistag_PNet\n"
+    tt_pnet_efficiency = 0.049#calculated by hand on v6, hadronic+semileptonic pass/(pass+fail)!
+    rate_param_pass = "CMS_ttbar_mistag_PNet rateParam SR_Pass* TTTo* 1.0 [0.0,3.0]\n"
+    rate_param_fail = f"tt_scale_fail rateParam SR_Fail* TTTo* (1-{tt_pnet_efficiency}*@0)/(1-{tt_pnet_efficiency}) CMS_ttbar_mistag_PNet\n"
     
     lines.append(rate_param_pass)
     lines.append(rate_param_fail)
@@ -119,10 +120,11 @@ def test_fit(signal, tf='', working_area='CR_run2', defMinStrat=0,  extra='--rob
 
     twoD.MLfit('{}-{}_area'.format(signal,tf),rMin=-20,rMax=20,verbosity=1,extra=extra)
 
+
 def test_plot(signal, tf='', working_area='CR_run2'):
     twoD = TwoDAlphabet(working_area, '{}/runConfig.json'.format(working_area), loadPrevious=True)
     subset = twoD.ledger.select(_select_signal, signal, tf)
-    twoD.StdPlots('{}-{}_area'.format(signal,tf), subset,extraText="WiP")
+    twoD.StdPlots('{}-{}_area'.format(signal,tf), subset)
 
 def _gof_for_FTest(twoD, subtag, card_or_w='card.txt'):
 
@@ -240,6 +242,7 @@ def test_GoF(signal, working_area,tf='', condor=True,extra=''):
         print('{}/{}-area/card.txt does not exist, making card'.format(twoD.tag,signame))
         subset = twoD.ledger.select(_select_signal, signame, tf)
         twoD.MakeCard(subset, signame+'_area')
+        add_tt_pnet_sf_to_card(working_area,'{}-{}_area'.format(signal, tf))
     if condor == False:
         twoD.GoodnessOfFit(
             signame+'-{}_area'.format(tf), ntoys=100, freezeSignal=0,
@@ -309,6 +312,7 @@ def test_limit(working_area,signal,rpfOrder,json_file,blind=True,rpf_params={}):
     #Make a subset and card as in test_fit()
     subset = twoD.ledger.select(_select_signal, signal, rpfOrder)
     twoD.MakeCard(subset, '{}-{}_area'.format(signal, rpfOrder))
+    add_tt_pnet_sf_to_card(working_area,'{}-{}_area'.format(signal, rpfOrder))    
     #Run the blinded limit with our dictionary of TF parameters
     twoD.Limit(
         subtag='{}-{}_area'.format(signal, rpfOrder),
@@ -320,16 +324,24 @@ def test_limit(working_area,signal,rpfOrder,json_file,blind=True,rpf_params={}):
 
 if __name__ == "__main__":
     #make_env_tarball()
-    #Running CR fits
-    working_area='CR_run2'
-    test_make(working_area=working_area,json_name='CR_run2.json')
-    opt_names = ["0","1","2"]
-    for opt_name in opt_names:
-        test_fit(signal="MX1400_MY90",working_area=working_area,tf=opt_name) 
-        if opt_name=="0":
-            test_plot(signal="MX1400_MY90",working_area=working_area,tf=opt_name)
-    
-    test_GoF("MX1400_MY90", working_area=working_area,tf="0", condor=True,extra="--cminDefaultMinimizerStrategy 0")
-    #test_GoF_plot("MX1400_MY90", working_area=working_area,tf="0", condor=True)
-    test_FTest("0", "1", working_area="CR_run2",signal='MX1400_MY90')
-    test_FTest("1", "2", working_area="CR_run2",signal='MX1400_MY90')
+    working_area_SR='SR_run2_one_signal'
+    test_make(working_area=working_area_SR,json_name='SR_run2_one_signal.json')
+    rpf_order="0"
+    load_rpf_from_signal_name = "MX1400_MY90"
+    params_to_set = _load_fit_rpf("CR_run2","MX1400_MY90",rpf_order,"CR_run2.json")
+    params_to_set = {key.replace('CR', 'SR'): value for key, value in params_to_set.items()}#Replace CR parameter names with SR
+    print(params_to_set)
+
+    signal=f"MX2200_MY250"
+    test_fit(signal=signal,working_area=working_area_SR,tf=rpf_order)#Uncomment if needed to create a card
+    test_plot(signal, tf='0', working_area='SR_run2_one_signal')
+    test_SigInj(working_area_SR, signal, rpf_order, params_to_set, r=0.0, condor=True,scale_rpf=1.0)
+    r_inj = 0.15
+    test_SigInj(working_area_SR, signal, rpf_order, params_to_set, r=r_inj, condor=True,scale_rpf=1.0)
+    #test_SigInj_plot(working_area_SR,signal,rpf_order, r=0.0, condor=True)
+    #test_SigInj_plot(working_area_SR,signal,rpf_order, r=r_inj, condor=True)
+    #Limit part
+    test_limit(working_area_SR,signal,rpf_order,'SR_run2_one_signal.json',blind=True,rpf_params=params_to_set)
+
+    par0 = params_to_set["Background_SR_rpf_0_par0"]
+    test_Impacts(working_area_SR,signal,rpf_order,extra=f'-t -1 --setParameters Background_SR_rpf_0_par0={par0} --expectSignal=0.15')

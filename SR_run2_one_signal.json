@@ -6,8 +6,7 @@
         "HIST_UP": "mjj_my_$process_$region_$syst_up",
         "HIST_DOWN": "mjj_my_$process_$region_$syst_down",
         "path": "/uscms_data/d3/roguljic/el8_anomalous/el9_fitting/templates_v8/",
-        "SIGNAME":["MX1400_MY90", "MX1400_MY125", "MX1400_MY190", "MX1400_MY250", "MX1400_MY300", "MX1400_MY400", "MX1600_MY90", "MX1600_MY125", "MX1600_MY190", "MX1600_MY250", "MX1600_MY300", "MX1600_MY400", "MX1800_MY90", "MX1800_MY125", "MX1800_MY190", "MX1800_MY250", "MX1800_MY300", "MX1800_MY400", "MX2000_MY90", "MX2000_MY125", "MX2000_MY190", "MX2000_MY250", "MX2000_MY300", "MX2000_MY400", "MX2200_MY90", "MX2200_MY125", "MX2200_MY190", "MX2200_MY250", "MX2200_MY300", "MX2200_MY400", "MX2600_MY90", "MX2600_MY125", "MX2600_MY190", "MX2600_MY250", "MX2600_MY300", "MX2600_MY400", "MX3000_MY90", "MX3000_MY125", "MX3000_MY190", "MX3000_MY250", "MX3000_MY300", "MX3000_MY400","XToYH_HTo2BYTo2Up_MX-2000_MY-200","XToYH_HTo2BYTo2T_MX-2000_MY-400","TPrime_MX-2000_MY-125"
-        ],
+        "SIGNAME":["MX2200_MY250"],
         "TTbar": ["TTToHadronic","TTToSemiLeptonic"]	
 
     },
@@ -32,7 +31,7 @@
             "LOC": "path/FILE:HIST"
 	},
 	"SIGNAME": {
-	    "SYSTEMATICS":["lumi_13TeV","pdf_1_signal","CMS_l1_ecal_prefiring","CMS_pileup_13TeV","ps_isr","ps_fsr","QCD_fac_scale_signal","CMS_scale_j","CMS_res_j","CMS_Xbbtag_PNet","CMS_anomaly_tagging_signal"],
+	    "SYSTEMATICS":["lumi_13TeV","pdf_1_signal","CMS_l1_ecal_prefiring","CMS_pileup_13TeV","ps_isr","ps_fsr","CMS_scale_j","CMS_res_j","CMS_Xbbtag_PNet","CMS_anomaly_tagging_signal"],
             "SCALE": 1.0,
             "COLOR": "blue",
             "TYPE": "SIGNAL",
@@ -185,7 +184,7 @@
         "haddSignals": true,
         "plotPrefitSigInFitB": true,
         "plotTitles":false,
-	    "plotTemplateComparisons": false,
+	    "plotTemplateComparisons": true,
         "plotEvtsPerUnit": true,
         "year": 2
     }

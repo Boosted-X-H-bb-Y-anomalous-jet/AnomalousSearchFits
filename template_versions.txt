@@ -1,2 +1,6 @@
 v3: added delta eta cut (which should have been present already!)
 v4: adjusted SR and CR vae thresholds at >0.00002 and [0.000005,0.00002]
+v5: increased MX upper bound from 3.0 TeV, added eta/phi plots, remove jms/jmr, corrected jec variations
+v6: merged different years into "run2" templates and added vae_sf to SR + ttbar pnet in datacard only
+v7: updated trigger selection + MJJ cut at 1300
+v8: added new signals, recalculated everything for preapproval

@@ -95,53 +95,27 @@ def test_make(working_area='CR_run2',json_name='CR_run2.json'):
 
     twoD.Save()
 
-def add_vae_sf_to_card(working_area,subtag,signal,SF_file):
+def add_tt_pnet_sf_to_card(working_area,subtag):
+    datacard_path = f"{working_area}/{subtag}/card.txt"
+    with open(datacard_path, 'r') as datacard:
+        lines = datacard.readlines()
     
-    def append_to_datacard(era, signal, value, uncertainty_low, uncertainty_high, datacard_path):
-        with open(datacard_path, 'r') as datacard:
-            lines = datacard.readlines()
-        
-        for i, line in enumerate(lines):
-            if line.startswith('kmax'):
-                kmax_parts = line.split()
-                if kmax_parts[1] != '*':
-                    kmax_value = int(kmax_parts[1])
-                    kmax_parts[1] = str(kmax_value + 1)
-                    lines[i] = ' '.join(kmax_parts) + '\n'
-                break
-
-        vae_sf_line = f"vae_sf_{era} rateParam SR_Pass* {signal}_{era} {value}\n"
-        rate_param_line = f"vae_sf_{era} param {value} -{uncertainty_low}/+{uncertainty_high}\n"
-        
-        lines.append(vae_sf_line)
-        lines.append(rate_param_line)
-        
-        with open(datacard_path, 'w') as datacard:
-            datacard.writelines(lines)
-
-
-    card = f"{working_area}/{subtag}/card.txt"
-
-    with open(SF_file, 'r') as file:
-        for line in file:
-            parts = line.strip().split(',')
-            era = parts[0]
-            signal_sf = parts[1]
-            if signal!=signal_sf:
-                continue
-            value = parts[2]
-            uncertainty_high = parts[3]
-            uncertainty_low = parts[4]
-            
-            # Append the information to the datacard
-            append_to_datacard(era, signal, value, uncertainty_low, uncertainty_high, card)
+    tt_pnet_efficiency = 0.049#calculated by hand on v6, hadronic+semileptonic pass/(pass+fail)!
+    rate_param_pass = "CMS_ttbar_mistag_PNet rateParam SR_Pass* TTTo* 1.0 [0.0,3.0]\n"
+    rate_param_fail = f"tt_scale_fail rateParam SR_Fail* TTTo* (1-{tt_pnet_efficiency}*@0)/(1-{tt_pnet_efficiency}) CMS_ttbar_mistag_PNet\n"
+    
+    lines.append(rate_param_pass)
+    lines.append(rate_param_fail)
+    
+    with open(datacard_path, 'w') as datacard:
+        datacard.writelines(lines)
 
 def test_fit(signal, tf='', working_area='CR_run2', defMinStrat=0,  extra='--robustFit 1'): #extra='--robustHesse 1'
     twoD = TwoDAlphabet(working_area, '{}/runConfig.json'.format(working_area), loadPrevious=True)
 
     subset = twoD.ledger.select(_select_signal, signal, tf)
     twoD.MakeCard(subset, '{}-{}_area'.format(signal, tf))
-    add_vae_sf_to_card(working_area,'{}-{}_area'.format(signal, tf),signal,"SFs_vae.txt")
+    add_tt_pnet_sf_to_card(working_area,'{}-{}_area'.format(signal, tf))
 
     twoD.MLfit('{}-{}_area'.format(signal,tf),rMin=-20,rMax=20,verbosity=1,extra=extra)
 
@@ -267,7 +241,7 @@ def test_GoF(signal, working_area,tf='', condor=True,extra=''):
         print('{}/{}-area/card.txt does not exist, making card'.format(twoD.tag,signame))
         subset = twoD.ledger.select(_select_signal, signame, tf)
         twoD.MakeCard(subset, signame+'_area')
-        add_vae_sf_to_card(working_area,'{}-{}_area'.format(signal, tf),signal,"SFs_vae.txt")
+        add_tt_pnet_sf_to_card(working_area,'{}-{}_area'.format(signal, tf))
     if condor == False:
         twoD.GoodnessOfFit(
             signame+'-{}_area'.format(tf), ntoys=100, freezeSignal=0,
@@ -337,8 +311,7 @@ def test_limit(working_area,signal,rpfOrder,json_file,blind=True,rpf_params={}):
     #Make a subset and card as in test_fit()
     subset = twoD.ledger.select(_select_signal, signal, rpfOrder)
     twoD.MakeCard(subset, '{}-{}_area'.format(signal, rpfOrder))
-    add_vae_sf_to_card(working_area,'{}-{}_area'.format(signal, rpfOrder),signal,"SFs_vae.txt")
-    #Run the blinded limit with our dictionary of TF parameters
+    add_tt_pnet_sf_to_card(working_area,'{}-{}_area'.format(signal, rpfOrder))    #Run the blinded limit with our dictionary of TF parameters
     twoD.Limit(
         subtag='{}-{}_area'.format(signal, rpfOrder),
         blindData=blind,
@@ -358,23 +331,25 @@ if __name__ == "__main__":
     print(params_to_set)
     # #Btw. signal is normalized to xsec=5fb!
     # #Signal injection part
-    for MX in [1400,2000]:
+    for MX in [1400]:
         signal=f"MX{MX}_MY90"
-        #test_fit(signal=signal,working_area=working_area_SR,tf=rpf_order)#Uncomment if needed to create a card
+        test_fit(signal=signal,working_area=working_area_SR,tf=rpf_order)#Uncomment if needed to create a card
         test_SigInj(working_area_SR, signal, rpf_order, params_to_set, r=0.0, condor=True,scale_rpf=1.0)
-        if MX==2000:
-            r_inj = 0.2
-        else:
-            r_inj = 1.0
+        r_inj = 0.6
         test_SigInj(working_area_SR, signal, rpf_order, params_to_set, r=r_inj, condor=True,scale_rpf=1.0)
         #test_SigInj_plot(working_area_SR,signal,rpf_order, r=0.0, condor=True)
-        #test_SigInj_plot(working_area_SR,signal,rpf_order, r=0.2, condor=True)
-    
+        #test_SigInj_plot(working_area_SR,signal,rpf_order, r=r_inj, condor=True)
     #Limit part
-    for MX in [1200, 1400, 1600, 2000, 2500, 3000]:
-        signal=f"MX{MX}_MY90"
+    MX = ["1400","1600","1800","2000","2200","2600","3000"]
+    MY = ["90","125","190","250","300","400"]
+    for mx in MX:
+        for my in MY:
+            signal=f"MX{mx}_MY{my}"
+            test_limit(working_area_SR,signal,rpf_order,'SR_run2.json',blind=True,rpf_params=params_to_set)
+
+    for signal in ["XToYH_HTo2BYTo2Up_MX-2000_MY-200","XToYH_HTo2BYTo2T_MX-2000_MY-400","TPrime_MX-2000_MY-200"]:
         test_limit(working_area_SR,signal,rpf_order,'SR_run2.json',blind=True,rpf_params=params_to_set)
 
-    signal=f"MX2000_MY90"
+    signal=f"MX1400_MY90"
     par0 = params_to_set["Background_SR_rpf_0_par0"]
-    test_Impacts(working_area_SR,signal,rpf_order,extra=f'-t -1 --setParameters Background_SR_rpf_0_par0={par0} --expectSignal=0.2')
+    test_Impacts(working_area_SR,signal,rpf_order,extra=f'-t -1 --setParameters Background_SR_rpf_0_par0={par0} --expectSignal=0.6')

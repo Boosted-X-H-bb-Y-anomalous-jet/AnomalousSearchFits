@@ -1,13 +1,13 @@
 {
     "NAME": "XtoHY",
     "GLOBAL": {
-        "FILE": "templates_$process.root",
+        "FILE": "templates_$process_run2.root",
         "HIST": "mjj_my_$process_$region_nom",
         "HIST_UP": "mjj_my_$process_$region_$syst_up",
         "HIST_DOWN": "mjj_my_$process_$region_$syst_down",
-        "path": "/uscms_data/d3/roguljic/el8_anomalous/el9_fitting/templates_v4/",
-        "SIGNAME": ["MX1400_MY90_2016APV","MX1400_MY90_2016","MX1400_MY90_2017","MX1400_MY90_2018"],
-        "TTbar": ["TTToHadronic_2016APV","TTToHadronic_2016","TTToHadronic_2017","TTToHadronic_2018","TTToSemiLeptonic_2016APV","TTToSemiLeptonic_2016","TTToSemiLeptonic_2017","TTToSemiLeptonic_2018"]	
+        "path": "/uscms_data/d3/roguljic/el8_anomalous/el9_fitting/templates_v8/",
+        "SIGNAME": ["MX1400_MY90"],
+        "TTbar": ["TTToHadronic","TTToSemiLeptonic"]	
     },
     "REGIONS": {
         "CR_Pass": {
@@ -25,12 +25,12 @@
             "SCALE": 1.0,
             "COLOR": "black",
             "TYPE": "DATA",
-            "ALIAS":"data_obs_run2",
+            "ALIAS":"data_obs",
             "TITLE": "Data",
             "LOC": "path/FILE:HIST"
 	},
 	"SIGNAME": {
-	    "SYSTEMATICS":["lumi","pdf","prefire","pileup","PS_ISR","PS_FSR","F","R","RF","jes","jer","jms","jmr","pnet"],
+	    "SYSTEMATICS":["lumi_13TeV","CMS_l1_ecal_prefiring","CMS_pileup_13TeV","ps_isr","ps_fsr","CMS_scale_j","CMS_res_j","CMS_Xbbtag_PNet"],
             "SCALE": 1.0,
             "COLOR": "blue",
             "TYPE": "SIGNAL",
@@ -38,7 +38,7 @@
             "LOC": "path/FILE:HIST"
 	},
     "TTbar": {        
-        "SYSTEMATICS":["lumi","ttbar_xsec","pdf","prefire","pileup","PS_ISR","PS_FSR","F","R","RF","jes","jer","jms","jmr"],
+        "SYSTEMATICS":["lumi_13TeV","ttbar_xsec","pdf_1_ttbar","CMS_l1_ecal_prefiring","CMS_pileup_13TeV","ps_isr","ps_fsr","QCD_fac_scale_ttbar","QCD_ren_scale_ttbar","QCD_scale_ttbar","CMS_scale_j","CMS_res_j"],
         "SCALE": 1.0,
         "COLOR": "red",
         "TYPE": "BKG",
@@ -48,96 +48,105 @@
 
     },
     "SYSTEMATICS": {
-        "lumi": {
+        "lumi_13TeV": {
             "CODE": 0,
-            "VAL": 1.016
+            "VAL": 1.019
         },
         "ttbar_xsec": {
             "VAL": 1.05
         },
-        "top_ptrw": {
-            "ALIAS":"top_ptrw",
+        "CMS_anomaly_tagging_signal": {
+            "ALIAS":"vae_sf",
             "UP": "path/FILE:HIST_UP",
             "DOWN": "path/FILE:HIST_DOWN",
             "SIGMA": 1.0
         },
-
-        "prefire": {
+        "CMS_anomaly_tagging_tt": {
+            "ALIAS":"vae_sf",
+            "UP": "path/FILE:HIST_UP",
+            "DOWN": "path/FILE:HIST_DOWN",
+            "SIGMA": 1.0
+        },
+        "CMS_l1_ecal_prefiring": {
             "ALIAS": "prefire",
             "UP": "path/FILE:HIST_UP",
             "DOWN": "path/FILE:HIST_DOWN",
             "SIGMA": 1.0
         },
-
-        "pileup": {
+        "CMS_pileup_13TeV": {
             "ALIAS": "pileup",
             "UP": "path/FILE:HIST_UP",
             "DOWN": "path/FILE:HIST_DOWN",
             "SIGMA": 1.0
         },
-
-        "pdf": {
+        "pdf_1_ttbar": {
             "ALIAS": "pdf",
             "UP": "path/FILE:HIST_UP",
             "DOWN": "path/FILE:HIST_DOWN",
             "SIGMA": 1.0
         },
-        "F": {
+        "QCD_fac_scale_signal": {
             "ALIAS": "F",
             "UP": "path/FILE:HIST_UP",
             "DOWN": "path/FILE:HIST_DOWN",
             "SIGMA": 1.0
         },
-        "R": {
+        "QCD_fac_scale_ttbar": {
+            "ALIAS": "F",
+            "UP": "path/FILE:HIST_UP",
+            "DOWN": "path/FILE:HIST_DOWN",
+            "SIGMA": 1.0
+        },
+        "QCD_ren_scale_ttbar": {
             "ALIAS": "R",
             "UP": "path/FILE:HIST_UP",
             "DOWN": "path/FILE:HIST_DOWN",
             "SIGMA": 1.0
         },
-        "RF": {
+        "QCD_ren_scale_signal": {
+            "ALIAS": "R",
+            "UP": "path/FILE:HIST_UP",
+            "DOWN": "path/FILE:HIST_DOWN",
+            "SIGMA": 1.0
+        },
+        "QCD_scale_signal": {
             "ALIAS": "RF",
             "UP": "path/FILE:HIST_UP",
             "DOWN": "path/FILE:HIST_DOWN",
             "SIGMA": 1.0
         },
-        "PS_FSR": {
+        "QCD_scale_ttbar": {
+            "ALIAS": "RF",
+            "UP": "path/FILE:HIST_UP",
+            "DOWN": "path/FILE:HIST_DOWN",
+            "SIGMA": 1.0
+        },
+        "ps_fsr": {
             "ALIAS": "PS_FSR",
             "UP": "path/FILE:HIST_UP",
             "DOWN": "path/FILE:HIST_DOWN",
             "SIGMA": 1.0
         },
-        "PS_ISR": {
+        "ps_isr": {
             "ALIAS": "PS_ISR",
             "UP": "path/FILE:HIST_UP",
             "DOWN": "path/FILE:HIST_DOWN",
             "SIGMA": 1.0
         },
-        "pnet": {
+        "CMS_Xbbtag_PNet": {
             "ALIAS": "pnet",
             "UP": "path/FILE:HIST_UP",
             "DOWN": "path/FILE:HIST_DOWN",
             "SIGMA": 1.0
         },
-        "jms": {
-            "ALIAS": "jms",
-            "UP": "path/FILE:HIST_UP",
-            "DOWN": "path/FILE:HIST_DOWN",
-            "SIGMA": 1.0
-        },
-        "jes": {
+        "CMS_scale_j": {
             "ALIAS": "jes",
             "UP": "path/FILE:HIST_UP",
             "DOWN": "path/FILE:HIST_DOWN",
             "SIGMA": 1.0
         },
-        "jer": {
+        "CMS_res_j": {
             "ALIAS": "jer",
-            "UP": "path/FILE:HIST_UP",
-            "DOWN": "path/FILE:HIST_DOWN",
-            "SIGMA": 1.0
-        },
-        "jmr": {
-            "ALIAS": "jmr",
             "UP": "path/FILE:HIST_UP",
             "DOWN": "path/FILE:HIST_DOWN",
             "SIGMA": 1.0
@@ -148,15 +157,15 @@
         "default": {
           "X": {
             "NAME": "mx",
-            "TITLE": "m_{X} (GeV)",
-            "BINS": [1200,1300,1400,1500,1600,1700,1800,1900,2000,2200,2500,3000],
+            "TITLE": "M_{jj} (GeV)",
+            "BINS": [1300,1400,1500,1600,1700,1800,1900,2000,2200,2500,3000,3500],
             "SIGSTART": 1400,
             "SIGEND": 2000,
-            "SLICES":[1200,1600,2000,3000]
+            "SLICES":[1300,1600,2000,3500]
           },
           "Y": {
             "NAME": "my",
-            "TITLE": "m_{Y} (GeV)",
+            "TITLE": "M_{j}^{Y} (GeV)",
             "BINS": [40,50,60,70,80,90,100,120,140,160,200,250,350,400,500],
             "SLICES":[40,120,250,500]
           }
