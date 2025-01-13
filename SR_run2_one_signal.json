@@ -184,7 +184,7 @@
         "haddSignals": true,
         "plotPrefitSigInFitB": true,
         "plotTitles":false,
-	    "plotTemplateComparisons": true,
+	    "plotTemplateComparisons": false,
         "plotEvtsPerUnit": true,
         "year": 2
     }

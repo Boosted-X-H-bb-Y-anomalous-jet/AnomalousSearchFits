@@ -320,36 +320,33 @@ def test_limit(working_area,signal,rpfOrder,json_file,blind=True,rpf_params={}):
         condor=False
     )
 
+def test_significance(working_area,signal,rpfOrder,json_file,blind=False,rpf_params={}):
+    '''Assumes that we have already done the limits (e.g. created a datacard and added top anomaly tagging sfs) 
+    '''
+    twoD = TwoDAlphabet(working_area, json_file, loadPrevious=True)
+
+
+    twoD.Significance(
+        subtag='{}-{}_area'.format(signal, rpfOrder),
+        blindData=blind,
+        verbosity=0,
+        setParams=rpf_params
+    )
+
 if __name__ == "__main__":
     #make_env_tarball()
     working_area_SR='SR_run2'
-    test_make(working_area=working_area_SR,json_name='SR_run2.json')
-    rpf_order="0"
-    load_rpf_from_signal_name = "MX1400_MY90"
-    params_to_set = _load_fit_rpf("CR_run2","MX1400_MY90",rpf_order,"CR_run2.json")
-    params_to_set = {key.replace('CR', 'SR'): value for key, value in params_to_set.items()}#Replace CR parameter names with SR
-    print(params_to_set)
-    # #Btw. signal is normalized to xsec=5fb!
-    # #Signal injection part
-    for MX in [1400]:
-        signal=f"MX{MX}_MY90"
-        test_fit(signal=signal,working_area=working_area_SR,tf=rpf_order)#Uncomment if needed to create a card
-        test_SigInj(working_area_SR, signal, rpf_order, params_to_set, r=0.0, condor=True,scale_rpf=1.0)
-        r_inj = 0.6
-        test_SigInj(working_area_SR, signal, rpf_order, params_to_set, r=r_inj, condor=True,scale_rpf=1.0)
-        #test_SigInj_plot(working_area_SR,signal,rpf_order, r=0.0, condor=True)
-        #test_SigInj_plot(working_area_SR,signal,rpf_order, r=r_inj, condor=True)
-    #Limit part
+    #test_make(working_area=working_area_SR,json_name='SR_run2.json')
+    rpf_order="2"
+    #test_fit(signal=signal,working_area=working_area_SR,tf=rpf_order)#Uncomment if needed to create a card
     MX = ["1400","1600","1800","2000","2200","2600","3000"]
     MY = ["90","125","190","250","300","400"]
     for mx in MX:
         for my in MY:
             signal=f"MX{mx}_MY{my}"
-            test_limit(working_area_SR,signal,rpf_order,'SR_run2.json',blind=True,rpf_params=params_to_set)
+            #test_limit(working_area_SR,signal,rpf_order,'SR_run2.json',blind=False)
+            test_significance(working_area_SR,signal,rpf_order,'SR_run2.json',blind=False)
 
-    for signal in ["XToYH_HTo2BYTo2Up_MX-2000_MY-200","XToYH_HTo2BYTo2T_MX-2000_MY-400","TPrime_MX-2000_MY-200"]:
-        test_limit(working_area_SR,signal,rpf_order,'SR_run2.json',blind=True,rpf_params=params_to_set)
-
-    signal=f"MX1400_MY90"
-    par0 = params_to_set["Background_SR_rpf_0_par0"]
-    test_Impacts(working_area_SR,signal,rpf_order,extra=f'-t -1 --setParameters Background_SR_rpf_0_par0={par0} --expectSignal=0.6')
+    for signal in ["XToYH_HTo2BYTo2Up_MX-2000_MY-200","XToYH_HTo2BYTo2T_MX-2000_MY-400","TPrime_MX-2000_MY-125"]:
+        #test_limit(working_area_SR,signal,rpf_order,'SR_run2.json',blind=True)
+        test_significance(working_area_SR,signal,rpf_order,'SR_run2.json',blind=False)
